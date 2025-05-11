@@ -1,7 +1,173 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use std::{path::Path, sync::Mutex};
+
+use magic_wormhole::{transfer, transit, MailboxConnection, Wormhole, WormholeError};
+use serde::Serialize;
+use tauri::{ipc::Channel, Manager, State};
+use thiserror::Error;
+use tokio::{runtime::Handle, sync::mpsc};
+
+#[derive(Default)]
+struct AppState {
+    send_task_handler: Option<mpsc::Sender<SendCommand>>,
+}
+
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+async fn get_tasks_number() -> usize {
+    let metrics = Handle::current().metrics();
+    metrics.num_alive_tasks()
+}
+
+enum SendCommand {
+    Confirm,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase", tag = "event", content = "data")]
+enum SendEvent {
+    #[serde(rename_all = "camelCase")]
+    Code { code: String },
+    #[serde(rename_all = "camelCase")]
+    Connected,
+    #[serde(rename_all = "camelCase")]
+    TransitInfo {
+        connection_type: String,
+        address: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    Progress { sent: u64, total: u64 },
+    #[serde(rename_all = "camelCase")]
+    Finished,
+    #[serde(rename_all = "camelCase")]
+    Error { message: String },
+}
+
+#[derive(Error, Debug)]
+enum SendError {
+    #[error("Wormhole error: {}", .0)]
+    WormholeError(#[from] magic_wormhole::WormholeError),
+    #[error("Transfer error: {}", .0)]
+    TransferError(#[from] magic_wormhole::transfer::TransferError),
+}
+
+#[tauri::command]
+fn compute_file_name(file_path: &str) -> Option<String> {
+    Path::new(&file_path)
+        .file_name()
+        .and_then(|x| x.to_str())
+        .map(|x| x.to_string())
+}
+
+async fn create_wormhole(backend_to_ui: Channel<SendEvent>) -> Result<Wormhole, WormholeError> {
+    let mailbox = MailboxConnection::create(transfer::APP_CONFIG, 2).await?;
+    backend_to_ui
+        .send(SendEvent::Code {
+            code: mailbox.code().to_string(),
+        })
+        .unwrap();
+    Wormhole::connect(mailbox).await
+}
+
+async fn send_file_impl(
+    file_path: String,
+    backend_to_ui: Channel<SendEvent>,
+    mut ui_to_backend: mpsc::Receiver<SendCommand>,
+) -> Result<(), SendError> {
+    let file_name = compute_file_name(&file_path).unwrap();
+
+    let wormhole = tokio::select! {
+        wormhole = create_wormhole(backend_to_ui.clone()) => {
+            wormhole?
+        }
+        _ = async { while ui_to_backend.recv().await.is_some() {} } => {
+            return Ok(())
+        }
+    };
+
+    backend_to_ui.send(SendEvent::Connected).unwrap();
+
+    match ui_to_backend.recv().await {
+        Some(SendCommand::Confirm) => {}
+        None => return Ok(()),
+    }
+
+    {
+        let backend_to_ui = backend_to_ui.clone();
+        let backend_to_ui2 = backend_to_ui.clone();
+        let relay_hint =
+            transit::RelayHint::from_urls(None, [transit::DEFAULT_RELAY_SERVER.parse().unwrap()])
+                .unwrap();
+        transfer::send_file_or_folder(
+            wormhole,
+            vec![relay_hint],
+            &file_path,
+            file_name,
+            transit::Abilities::ALL,
+            |info| {
+                let connection_type = match info.conn_type {
+                    transit::ConnectionType::Direct => "direct",
+                    transit::ConnectionType::Relay { .. } => "relay",
+                    _ => "unknown",
+                }
+                .to_string();
+                backend_to_ui
+                    .send(SendEvent::TransitInfo {
+                        connection_type,
+                        address: info.peer_addr.to_string(),
+                    })
+                    .unwrap();
+            },
+            move |sent, total| {
+                backend_to_ui2
+                    .send(SendEvent::Progress { sent, total })
+                    .unwrap();
+            },
+            async { while ui_to_backend.recv().await.is_some() {} },
+        )
+        .await?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn send_file(
+    state: State<'_, Mutex<AppState>>,
+    file_path: String,
+    on_event: Channel<SendEvent>,
+) -> Result<(), ()> {
+    let (s, r) = mpsc::channel::<SendCommand>(1);
+    {
+        let mut state = state.lock().unwrap();
+        state.send_task_handler = Some(s);
+    }
+
+    match send_file_impl(file_path, on_event.clone(), r).await {
+        Err(error) => {
+            on_event
+                .send(SendEvent::Error {
+                    message: error.to_string(),
+                })
+                .unwrap();
+        }
+        Ok(()) => {
+            on_event.send(SendEvent::Finished).unwrap();
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn confirm_send(state: State<'_, Mutex<AppState>>) {
+    let state = state.lock().unwrap();
+    let handler = state.send_task_handler.as_ref().unwrap();
+    handler.blocking_send(SendCommand::Confirm).unwrap();
+}
+
+#[tauri::command]
+fn cancel_send(state: State<'_, Mutex<AppState>>) {
+    let mut state = state.lock().unwrap();
+    state.send_task_handler = None;
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -9,7 +175,17 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            get_tasks_number,
+            compute_file_name,
+            send_file,
+            confirm_send,
+            cancel_send,
+        ])
+        .setup(|app| {
+            app.manage(Mutex::new(AppState::default()));
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
