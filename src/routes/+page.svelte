@@ -58,7 +58,7 @@
     | {
         event: "transitInfo"
         data: {
-          connectionType: string
+          connectionType: "direct" | "relay" | "unknown"
           address: string
         }
       }
