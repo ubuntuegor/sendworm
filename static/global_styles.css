@@ -1,0 +1,43 @@
+body {
+  margin: 0px;
+  overflow: hidden;
+  font-family: "Clear Sans", system-ui;
+  user-select: none;
+}
+
+button {
+  all: unset;
+  outline: revert;
+}
+
+h2 {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+@font-face {
+  font-family: "Clear Sans";
+  font-weight: 300;
+  src: url("/fonts/ClearSans-Light.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Clear Sans";
+  font-weight: normal;
+  src: url("/fonts/ClearSans-Regular.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Clear Sans";
+  font-weight: bold;
+  src: url("/fonts/ClearSans-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Clear Sans";
+  font-weight: 500;
+  src: url("/fonts/ClearSans-Medium.woff") format("woff");
+}
