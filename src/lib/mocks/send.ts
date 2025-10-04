@@ -24,6 +24,15 @@ export async function mockSendFile(
     },
   })
   await delay(3000)
+
+  // channel.send({
+  //   event: "error",
+  //   data: {
+  //     message: "Wormhole error: something happened",
+  //   },
+  // })
+  // return
+
   channel.send({
     event: "connected",
   })
@@ -48,8 +57,29 @@ export async function mockConfirmSend() {
         total: totalSize,
       },
     })
+
+    // if (i > 5000) {
+    //   channel.send({
+    //     event: "error",
+    //     data: {
+    //       message: "Wormhole error: disconnected",
+    //     },
+    //   })
+    //   return
+    // }
+
     await delay(500)
   }
+  channel.send({
+    event: "progress",
+    data: {
+      sent: totalSize,
+      total: totalSize,
+    },
+  })
+
+  await delay(5)
+
   channel.send({
     event: "finished",
   })

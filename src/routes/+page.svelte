@@ -43,8 +43,8 @@
       }
 
       if (myState.state === "idle" && payload.type === "drop") {
-        const filePath = payload.paths[0] || null
-        if (filePath) sendFile(filePath)
+        const filePath = payload.paths[0]
+        if (filePath) sendFileOrFolder(filePath)
       }
     })
 
@@ -53,7 +53,7 @@
     }
   })
 
-  function sendFile(filePath: string) {
+  function sendFileOrFolder(filePath: string) {
     myState = {
       state: "sending",
       filePath,
@@ -65,7 +65,15 @@
       multiple: false,
     })
 
-    if (filePath) sendFile(filePath)
+    if (filePath) sendFileOrFolder(filePath)
+  }
+
+  async function selectAndSendFolder() {
+    const filePath = await open({
+      directory: true,
+    })
+
+    if (filePath) sendFileOrFolder(filePath)
   }
 
   function goToIdle() {
@@ -78,7 +86,7 @@
     <div
       class="area send-area"
       class:drag-hover={shouldDoHoverEffect}
-      transition:shrink={{ duration: shrinkDuration, easing: quadInOut }}
+      transition:shrink={{ duration: shrinkDuration }}
     >
       {#if myState.state !== "sending"}
         <div
@@ -103,6 +111,20 @@
           <div class="bottom-half">
             <h2>Drag a file here</h2>
             <p class="sub-text">or click to select a file</p>
+            <button class="send-folder-button" onclick={selectAndSendFolder}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="currentColor"
+                  d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h6l2 2h8q.825 0 1.413.588T22 8v10q0 .825-.587 1.413T20 20zm0-2h16V8h-8.825l-2-2H4zm0 0V6z"
+                />
+              </svg>
+              <span>Select folder</span>
+            </button>
           </div>
         </div>
 
@@ -125,7 +147,7 @@
   {#if myState.state === "idle" || myState.state === "receiving"}
     <div
       class="area receive-area halved"
-      transition:shrink={{ duration: shrinkDuration, easing: quadInOut }}
+      transition:shrink={{ duration: shrinkDuration }}
     >
       <div
         class="area-content"
@@ -256,6 +278,34 @@
       font-size: 14px;
       font-weight: 300;
       color: rgba(204, 218, 255, 0.5);
+    }
+
+    .send-folder-button {
+      cursor: pointer;
+      z-index: 2;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background-color: #ccdaff;
+      color: #202943;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background-color ease 0.1s;
+
+      span {
+        margin-bottom: 2px;
+      }
+
+      &:hover {
+        background-color: #e6ecff;
+      }
+
+      &:active {
+        background-color: #9eabcf;
+      }
     }
   }
 

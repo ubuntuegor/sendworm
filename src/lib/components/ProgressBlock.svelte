@@ -1,0 +1,139 @@
+<script lang="ts">
+  import type { TransitInfo } from "$lib/types/send"
+  import { formatSize } from "$lib/utils/files"
+  import { quadOut } from "svelte/easing"
+  import { fade, scale } from "svelte/transition"
+
+  interface Props {
+    progress: [number, number] | null
+    transitInfo: TransitInfo | null
+    finished: boolean
+    error: string | null
+  }
+
+  const { progress, transitInfo, finished, error }: Props = $props()
+
+  const percentage = $derived.by(() => {
+    if (finished) return 100
+    if (!progress) return 0
+    return Math.floor((progress[0] / progress[1]) * 100)
+  })
+
+  const subText = $derived.by(() => {
+    if (error !== null) return error
+    if (finished) return "Transfer complete"
+    if (!transitInfo) return "Connecting..."
+
+    switch (transitInfo.connectionType) {
+      case "direct":
+        return `Connected to ${transitInfo.address} directly`
+      case "relay":
+        return `Connected to ${transitInfo.address} via relay`
+      case "unknown":
+        return `Connected to ${transitInfo.address}`
+    }
+  })
+</script>
+
+<div
+  class="progress-circle"
+  class:semitransparent={error !== null}
+  role="progressbar"
+  aria-valuenow={percentage}
+  style:--percentage={percentage + "%"}
+>
+  {#if !finished}
+    <div
+      class="filling"
+      transition:scale={{ duration: 200, opacity: 1, easing: quadOut }}
+    ></div>
+    <div class="percentage" transition:fade={{ duration: 200 }}>
+      <b>{percentage}</b>%
+    </div>
+  {:else}
+    <div class="done-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="54"
+        height="54"
+        viewBox="0 0 24 24"
+      >
+        <path
+          fill="currentColor"
+          d="m9.55 18l-5.7-5.7l1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"
+        />
+      </svg>
+    </div>
+  {/if}
+</div>
+<p class:semitransparent={error !== null}>
+  {#if progress && finished}
+    Sent {formatSize(progress[1])} out of {formatSize(progress[1])}
+  {:else if progress}
+    Sent {formatSize(progress[0])} out of {formatSize(progress[1])}
+  {:else}
+    Sent 0 B out of 0 B
+  {/if}
+</p>
+<p class="sub-text" class:red={error !== null}>
+  {subText}
+</p>
+
+<style>
+  .semitransparent {
+    opacity: 0.5;
+  }
+
+  .progress-circle {
+    margin-bottom: 10px;
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-image: conic-gradient(
+        currentColor var(--percentage),
+        transparent var(--percentage)
+      ),
+      linear-gradient(var(--percentage-inactive));
+
+    line-height: 80px;
+    font-size: 20px;
+    text-align: center;
+
+    div {
+      position: absolute;
+      top: 0px;
+      right: 0px;
+      bottom: 0px;
+      left: 0px;
+    }
+
+    .filling {
+      margin: 6px;
+      border-radius: 50%;
+      background-color: var(--filling-color);
+    }
+
+    .done-icon {
+      margin-top: 16px;
+      color: var(--filling-color);
+    }
+  }
+
+  p {
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .sub-text {
+    margin-top: 1px;
+    font-size: 12px;
+    opacity: 0.5;
+    text-align: center;
+
+    &.red {
+      color: #ff9ca8;
+      opacity: 1;
+    }
+  }
+</style>

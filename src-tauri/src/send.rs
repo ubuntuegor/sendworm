@@ -4,7 +4,7 @@ use magic_wormhole::{transfer, transit, MailboxConnection, Wormhole, WormholeErr
 use serde::Serialize;
 use tauri::{ipc::Channel, State};
 use thiserror::Error;
-use tokio::sync::mpsc;
+use tokio::{fs, sync::mpsc};
 
 pub enum SendCommand {
     Confirm,
@@ -48,6 +48,21 @@ pub fn compute_file_name(file_path: &str) -> Option<String> {
         .map(|x| x.to_string())
 }
 
+#[tauri::command]
+pub async fn get_file_size(file_path: String) -> Option<u64> {
+    let metadata = fs::metadata(file_path).await.ok()?;
+    if !metadata.is_dir() {
+        metadata.len().into()
+    } else {
+        None
+    }
+}
+
+#[tauri::command]
+pub async fn is_folder(file_path: String) -> Option<bool> {
+    fs::metadata(file_path).await.ok()?.is_dir().into()
+}
+
 async fn create_wormhole(
     code_handler: impl FnOnce(String) -> (),
 ) -> Result<Wormhole, WormholeError> {
@@ -56,7 +71,7 @@ async fn create_wormhole(
     Wormhole::connect(mailbox).await
 }
 
-async fn send_file_impl(
+async fn send_file_or_folder_impl(
     file_path: String,
     backend_to_ui: Channel<SendEvent>,
     mut ui_to_backend: mpsc::Receiver<SendCommand>,
@@ -119,7 +134,7 @@ async fn send_file_impl(
 }
 
 #[tauri::command]
-pub async fn send_file(
+pub async fn send_file_or_folder(
     state: State<'_, Mutex<crate::AppState>>,
     file_path: String,
     on_event: Channel<SendEvent>,
@@ -130,7 +145,7 @@ pub async fn send_file(
         state.send_task_handler = Some(s);
     }
 
-    match send_file_impl(file_path, on_event.clone(), r).await {
+    match send_file_or_folder_impl(file_path, on_event.clone(), r).await {
         Err(error) => {
             on_event
                 .send(SendEvent::Error {
