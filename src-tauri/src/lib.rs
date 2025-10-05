@@ -3,11 +3,13 @@ use std::sync::Mutex;
 use tauri::Manager;
 use tokio::runtime;
 
+mod receive;
 mod send;
 
 #[derive(Default)]
 pub struct AppState {
     send_task_handler: Option<send::SendHandler>,
+    receive_task_handler: Option<receive::ReceiveHandler>,
 }
 
 #[tauri::command]
@@ -30,6 +32,9 @@ pub fn run() {
             send::send_file_or_folder,
             send::confirm_send,
             send::cancel_send,
+            receive::receive_file,
+            receive::confirm_receive,
+            receive::cancel_receive,
         ])
         .setup(|app| {
             app.manage(Mutex::new(AppState::default()));
