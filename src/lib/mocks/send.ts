@@ -1,20 +1,9 @@
 import type { SendEvent } from "$lib/types/send"
-import { delay } from "./common"
-
-export class MockChannel<T> {
-  onmessage: (response: T) => void = () => {}
-
-  send(msg: T) {
-    this.onmessage(msg)
-  }
-}
+import { delay, MockChannel } from "./common"
 
 let currentChannel: MockChannel<SendEvent> | null = null
 
-export async function mockSendFile(
-  filePath: string,
-  channel: MockChannel<SendEvent>
-) {
+export async function mockSendFile(channel: MockChannel<SendEvent>) {
   currentChannel = channel
   await delay(1000)
   channel.send({

@@ -1,17 +1,20 @@
 <script lang="ts">
-  import type { TransitInfo } from "$lib/types/send"
+  import type { TransitInfo } from "$lib/types/common"
   import { formatSize } from "$lib/utils/files"
   import { quadOut } from "svelte/easing"
   import { fade, scale } from "svelte/transition"
 
   interface Props {
+    mode: "send" | "receive"
     progress: [number, number] | null
     transitInfo: TransitInfo | null
     finished: boolean
     error: string | null
   }
 
-  const { progress, transitInfo, finished, error }: Props = $props()
+  const { mode, progress, transitInfo, finished, error }: Props = $props()
+
+  const action = $derived(mode === "send" ? "Sent" : "Received")
 
   const percentage = $derived.by(() => {
     if (finished) return 100
@@ -68,11 +71,11 @@
 </div>
 <p class:semitransparent={error !== null}>
   {#if progress && finished}
-    Sent {formatSize(progress[1])} out of {formatSize(progress[1])}
+    {action} {formatSize(progress[1])} out of {formatSize(progress[1])}
   {:else if progress}
-    Sent {formatSize(progress[0])} out of {formatSize(progress[1])}
+    {action} {formatSize(progress[0])} out of {formatSize(progress[1])}
   {:else}
-    Sent 0 B out of 0 B
+    {action} 0 B out of 0 B
   {/if}
 </p>
 <p class="sub-text" class:red={error !== null}>

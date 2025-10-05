@@ -1,7 +1,4 @@
-export type TransitInfo = {
-  connectionType: "direct" | "relay" | "unknown"
-  address: string
-}
+import type { TransitInfo } from "./common"
 
 export type SendEvent =
   | {

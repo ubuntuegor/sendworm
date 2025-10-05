@@ -2,13 +2,14 @@
   import { formatSize } from "$lib/utils/files"
 
   interface Props {
+    mode: "send" | "receive"
     isDir: boolean
     fileName: string | null
     fileNameTooltip: string | null
     fileSize: number | null
   }
 
-  const { isDir, fileName, fileNameTooltip, fileSize }: Props = $props()
+  const { mode, isDir, fileName, fileNameTooltip, fileSize }: Props = $props()
 </script>
 
 <div class="file-info">
@@ -40,7 +41,7 @@
 
   <div class="name-and-more">
     <p class="sub-title">
-      Sending a {isDir ? "folder" : "file"}
+      {mode === "send" ? "Sending" : "Receiving"} a {isDir ? "folder" : "file"}
       {fileSize ? `(${formatSize(fileSize)})` : ""}
     </p>
     <p class="title" title={fileNameTooltip}>

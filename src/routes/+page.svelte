@@ -1,9 +1,9 @@
 <script lang="ts">
+  import ReceivePanel from "$lib/components/ReceivePanel.svelte"
   import SendPanel from "$lib/components/SendPanel.svelte"
   import { shrink } from "$lib/transitions"
   import { getCurrentWindow } from "@tauri-apps/api/window"
   import { open } from "@tauri-apps/plugin-dialog"
-  import { quadInOut } from "svelte/easing"
   import { fade } from "svelte/transition"
 
   type State =
@@ -23,6 +23,8 @@
   const fadeDuration = 300 / 2
 
   let myState: State = $state({ state: "idle" })
+
+  let receiveCode = $state("")
 
   let isDragHovering = $state(false)
   let shouldDoHoverEffect = $derived(isDragHovering && myState.state === "idle")
@@ -76,6 +78,15 @@
     if (filePath) sendFileOrFolder(filePath)
   }
 
+  function receiveFile() {
+    myState = {
+      state: "receiving",
+      code: receiveCode,
+    }
+
+    receiveCode = ""
+  }
+
   function goToIdle() {
     myState = { state: "idle" }
   }
@@ -91,8 +102,8 @@
       {#if myState.state !== "sending"}
         <div
           class="area-content send-menu-content halved"
-          in:fade={{ duration: fadeDuration, delay: fadeDuration }}
-          out:fade={{ duration: fadeDuration }}
+          in:fade|global={{ duration: fadeDuration, delay: fadeDuration }}
+          out:fade|global={{ duration: fadeDuration }}
         >
           <div class="drop-border"></div>
           <div class="top-half">
@@ -131,7 +142,7 @@
         <button
           class="send-button-overlay"
           onclick={selectAndSendFile}
-          aria-label="Send files"
+          aria-label="Select and send file"
         ></button>
       {:else}
         <div
@@ -146,14 +157,68 @@
   {/if}
   {#if myState.state === "idle" || myState.state === "receiving"}
     <div
-      class="area receive-area halved"
+      class="area receive-area"
       transition:shrink={{ duration: shrinkDuration }}
     >
-      <div
-        class="area-content"
-        in:fade={{ duration: fadeDuration, delay: fadeDuration }}
-        out:fade={{ duration: fadeDuration }}
-      ></div>
+      {#if myState.state !== "receiving"}
+        <div
+          class="area-content receive-menu-content halved"
+          in:fade|global={{ duration: fadeDuration, delay: fadeDuration }}
+          out:fade|global={{ duration: fadeDuration }}
+        >
+          <div class="top-half">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="96"
+              height="96"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"
+              />
+            </svg>
+          </div>
+          <div class="bottom-half">
+            <h2>Enter code to receive</h2>
+            <form class="code-form" onsubmit={receiveFile}>
+              <input
+                type="text"
+                name="receive-code"
+                placeholder="Start typing"
+                spellcheck="false"
+                autocomplete="off"
+                bind:value={receiveCode}
+              />
+              <button
+                type="submit"
+                aria-label="Receive file"
+                disabled={receiveCode === ""}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M12.6 12L8 7.4L9.4 6l6 6l-6 6L8 16.6z"
+                  />
+                </svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      {:else}
+        <div
+          class="area-content"
+          in:fade={{ duration: fadeDuration, delay: fadeDuration }}
+          out:fade={{ duration: fadeDuration }}
+        >
+          <ReceivePanel code={myState.code} goBack={goToIdle} />
+        </div>
+      {/if}
     </div>
   {/if}
 </main>
@@ -256,6 +321,9 @@
   }
 
   .send-menu-content {
+    overflow: hidden;
+    white-space: nowrap;
+
     .drop-border {
       position: absolute;
       top: 18px;
@@ -311,6 +379,88 @@
 
   .receive-area {
     background-color: #131210;
+    color: #ffe0b5;
     border: solid 1px rgba(255, 224, 181, 0.25);
+  }
+
+  .receive-menu-content {
+    overflow: hidden;
+    white-space: nowrap;
+
+    h2 {
+      font-size: 24px;
+      font-weight: 500;
+      margin-bottom: 18px;
+    }
+
+    .code-form {
+      width: 240px;
+      display: flex;
+      gap: 6px;
+
+      input {
+        all: unset;
+        height: 32px;
+        box-sizing: border-box;
+        flex: 1 1 auto;
+        padding: 0px 11px;
+        padding-bottom: 2px;
+
+        background-color: #1d1b18;
+        color: #ffe0b5;
+        border: solid 1px rgba(255, 224, 181, 0.25);
+        border-radius: 12px;
+
+        font-weight: 300;
+        font-size: 14px;
+
+        &::placeholder {
+          color: rgba(255, 224, 181, 0.25);
+        }
+
+        &::selection {
+          background-color: #725b3a;
+        }
+
+        &:focus {
+          border: solid 1px rgba(255, 224, 181, 0.75);
+          outline: none;
+        }
+      }
+
+      button {
+        cursor: pointer;
+        flex: 0 0 auto;
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-content: center;
+
+        background-color: #ffe0b5;
+        color: #131210;
+        border-radius: 50%;
+
+        transition:
+          opacity ease 0.1s,
+          background-color ease 0.1s;
+
+        &[disabled] {
+          opacity: 0.5;
+          cursor: default;
+        }
+
+        &:hover:not([disabled]) {
+          background-color: #ffe6c3;
+        }
+
+        &:active:not([disabled]) {
+          background-color: #e3c396;
+        }
+
+        svg {
+          margin-left: 2px;
+        }
+      }
+    }
   }
 </style>

@@ -1,20 +1,21 @@
 <script lang="ts">
   import {
-    MockChannel,
     mockSendFile,
     mockConfirmSend,
     mockCancelSend,
   } from "$lib/mocks/send"
-  import type { TransitInfo, SendEvent } from "$lib/types/send"
+  import type { TransitInfo } from "$lib/types/common"
+  import type { SendEvent } from "$lib/types/send"
   import { Channel, invoke } from "@tauri-apps/api/core"
   import { writeText } from "@tauri-apps/plugin-clipboard-manager"
   import { fade, scale } from "svelte/transition"
   import QRCode from "qrcode"
   import { quadOut } from "svelte/easing"
   import { computeFileName, getFileSize, isFolder } from "$lib/utils/files"
-  import FileInfo from "./FileInfo.svelte"
   import Spinner from "./Spinner.svelte"
   import ProgressBlock from "./ProgressBlock.svelte"
+  import { MockChannel } from "$lib/mocks/common"
+  import FileInfoBlock from "./FileInfoBlock.svelte"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -120,7 +121,7 @@
     }
 
     if (MOCK) {
-      mockSendFile(path, onEvent as MockChannel<SendEvent>)
+      mockSendFile(onEvent as MockChannel<SendEvent>)
     } else {
       invoke("send_file_or_folder", { filePath: path, onEvent })
     }
@@ -158,15 +159,6 @@
 <svelte:body onmousedown={clearSelection} />
 
 <div class="container">
-  <div class="top">
-    {#await Promise.all( [computeFileName(filePath), getFileSize(filePath), isFolder(filePath)] ) then [fileName, fileSize, isDir]}
-      <FileInfo
-        {isDir}
-        {fileName}
-        fileNameTooltip={filePath}
-        {fileSize}
-      />{/await}
-  </div>
   <div class="center">
     {#if error !== null && centerState.state !== "progress"}
       <div
@@ -225,6 +217,7 @@
         transition:scale={{ duration: 200, easing: quadOut }}
       >
         <ProgressBlock
+          mode="send"
           {...centerState}
           {error}
           --percentage-inactive="rgba(204, 218, 255, 0.25)"
@@ -232,6 +225,16 @@
         />
       </div>
     {/if}
+  </div>
+  <div class="top">
+    {#await Promise.all( [computeFileName(filePath), getFileSize(filePath), isFolder(filePath)] ) then [fileName, fileSize, isDir]}
+      <FileInfoBlock
+        mode="send"
+        {isDir}
+        {fileName}
+        fileNameTooltip={filePath}
+        {fileSize}
+      />{/await}
   </div>
   <div class="bottom">
     <button
@@ -267,7 +270,7 @@
 
   .bottom {
     position: absolute;
-    bottom: 0px;
+    bottom: 60px;
     left: 0px;
     right: 0px;
     display: grid;
@@ -389,7 +392,6 @@
   }
 
   .cancel-button {
-    margin-bottom: 60px;
     min-width: 160px;
     text-align: center;
     font-size: 14px;
