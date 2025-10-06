@@ -23,9 +23,10 @@
   interface Props {
     code: string
     goBack: () => void
+    onFileInfo: (info: FileInfo) => void
   }
 
-  const { code, goBack }: Props = $props()
+  const { code, goBack, onFileInfo }: Props = $props()
 
   type CenterState =
     | {
@@ -93,6 +94,7 @@
         case "fileInfo":
           centerState = { state: "confirmation" }
           fileInfo = message.data
+          onFileInfo(message.data)
           break
         case "transitInfo":
           if (centerState.state === "progress") {

@@ -3,6 +3,7 @@
   import ReceivePanel from "$lib/components/ReceivePanel.svelte"
   import SendPanel from "$lib/components/SendPanel.svelte"
   import { shrink } from "$lib/transitions"
+  import { basename } from "@tauri-apps/api/path"
   import { getCurrentWindow } from "@tauri-apps/api/window"
   import { open } from "@tauri-apps/plugin-dialog"
   import { fade } from "svelte/transition"
@@ -14,10 +15,12 @@
     | {
         state: "sending"
         filePath: string
+        fileName?: string
       }
     | {
         state: "receiving"
         code: string
+        fileName?: string
       }
 
   const shrinkDuration = 300
@@ -27,6 +30,16 @@
 
   let isDragHovering = $state(false)
   let shouldDoHoverEffect = $derived(isDragHovering && myState.state === "idle")
+
+  let windowTitle = $derived.by(() => {
+    if (myState.state === "sending") {
+      return `Sending ${myState.fileName || "file"}`
+    } else if (myState.state === "receiving") {
+      return `Receiving ${myState.fileName || "file"}`
+    } else {
+      return "Sendworm"
+    }
+  })
 
   $effect(() => {
     const unlistenPromise = getCurrentWindow().onDragDropEvent((event) => {
@@ -52,6 +65,20 @@
     return () => {
       unlistenPromise.then((unlisten) => unlisten())
     }
+  })
+
+  $effect(() => {
+    if (myState.state === "sending") {
+      basename(myState.filePath).then((name) => {
+        if (myState.state === "sending") {
+          myState.fileName = name
+        }
+      })
+    }
+  })
+
+  $effect(() => {
+    getCurrentWindow().setTitle(windowTitle)
   })
 
   function sendFileOrFolder(filePath: string) {
@@ -198,7 +225,14 @@
           in:fade={{ duration: fadeDuration, delay: fadeDuration }}
           out:fade={{ duration: fadeDuration }}
         >
-          <ReceivePanel code={myState.code} goBack={goToIdle} />
+          <ReceivePanel
+            code={myState.code}
+            goBack={goToIdle}
+            onFileInfo={(info) => {
+              if (myState.state === "receiving")
+                myState.fileName = info.fileName
+            }}
+          />
         </div>
       {/if}
     </div>
