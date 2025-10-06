@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CodeInput from "$lib/components/CodeInput.svelte"
   import ReceivePanel from "$lib/components/ReceivePanel.svelte"
   import SendPanel from "$lib/components/SendPanel.svelte"
   import { shrink } from "$lib/transitions"
@@ -23,8 +24,6 @@
   const fadeDuration = 300 / 2
 
   let myState: State = $state({ state: "idle" })
-
-  let receiveCode = $state("")
 
   let isDragHovering = $state(false)
   let shouldDoHoverEffect = $derived(isDragHovering && myState.state === "idle")
@@ -78,13 +77,11 @@
     if (filePath) sendFileOrFolder(filePath)
   }
 
-  function receiveFile() {
+  function receiveFile(code: string) {
     myState = {
       state: "receiving",
-      code: receiveCode,
+      code,
     }
-
-    receiveCode = ""
   }
 
   function goToIdle() {
@@ -181,33 +178,7 @@
           </div>
           <div class="bottom-half">
             <h2>Enter code to receive</h2>
-            <form class="code-form" onsubmit={receiveFile}>
-              <input
-                type="text"
-                name="receive-code"
-                placeholder="Start typing"
-                spellcheck="false"
-                autocomplete="off"
-                bind:value={receiveCode}
-              />
-              <button
-                type="submit"
-                aria-label="Receive file"
-                disabled={receiveCode === ""}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M12.6 12L8 7.4L9.4 6l6 6l-6 6L8 16.6z"
-                  />
-                </svg>
-              </button>
-            </form>
+            <CodeInput onsubmit={receiveFile} />
           </div>
         </div>
       {:else}
@@ -391,76 +362,6 @@
       font-size: 24px;
       font-weight: 500;
       margin-bottom: 18px;
-    }
-
-    .code-form {
-      width: 240px;
-      display: flex;
-      gap: 6px;
-
-      input {
-        all: unset;
-        height: 32px;
-        box-sizing: border-box;
-        flex: 1 1 auto;
-        padding: 0px 11px;
-        padding-bottom: 2px;
-
-        background-color: #1d1b18;
-        color: #ffe0b5;
-        border: solid 1px rgba(255, 224, 181, 0.25);
-        border-radius: 12px;
-
-        font-weight: 300;
-        font-size: 14px;
-
-        &::placeholder {
-          color: rgba(255, 224, 181, 0.25);
-        }
-
-        &::selection {
-          background-color: #725b3a;
-        }
-
-        &:focus {
-          border: solid 1px rgba(255, 224, 181, 0.75);
-          outline: none;
-        }
-      }
-
-      button {
-        cursor: pointer;
-        flex: 0 0 auto;
-        width: 32px;
-        height: 32px;
-        display: grid;
-        place-content: center;
-
-        background-color: #ffe0b5;
-        color: #131210;
-        border-radius: 50%;
-
-        transition:
-          opacity ease 0.1s,
-          background-color ease 0.1s;
-
-        &[disabled] {
-          opacity: 0.5;
-          cursor: default;
-        }
-
-        &:hover:not([disabled]) {
-          background-color: #ffe6c3;
-        }
-
-        &:active:not([disabled]) {
-          background-color: #e3c396;
-        }
-
-        svg {
-          margin-left: 2px;
-        }
-      }
     }
   }
 </style>

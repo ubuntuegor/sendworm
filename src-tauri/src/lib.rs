@@ -3,6 +3,7 @@ use std::sync::Mutex;
 use tauri::Manager;
 use tokio::runtime;
 
+mod completion;
 mod receive;
 mod send;
 
@@ -26,6 +27,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             get_tasks_number,
+            completion::get_completions,
             send::compute_file_name,
             send::get_file_size,
             send::is_folder,

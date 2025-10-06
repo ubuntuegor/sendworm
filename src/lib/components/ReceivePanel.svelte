@@ -143,8 +143,6 @@
     cancelReceive()
     goBack()
   }
-
-  $inspect(error)
 </script>
 
 <div class="container">
@@ -216,6 +214,10 @@
     display: grid;
     place-content: center;
     color: #ffe0b5;
+  }
+
+  .center {
+    padding: 6px;
   }
 
   .top {

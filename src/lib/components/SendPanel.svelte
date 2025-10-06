@@ -259,6 +259,10 @@
     color: #ccdaff;
   }
 
+  .center {
+    padding: 6px;
+  }
+
   .top {
     position: absolute;
     top: 40px;
