@@ -181,7 +181,8 @@
           {centerState.code}
           <button
             class="code-copy"
-            aria-label="Copy code"
+            title="Copy to clipboard"
+            aria-label="Copy code to clipboard"
             onclick={copyCodeToClipboard}
           >
             <svg
