@@ -90,12 +90,21 @@ async fn receive_file_impl(
 
     let folder = match ui_to_backend.recv().await {
         Some(ReceiveCommand::Confirm { folder }) => folder,
-        None => return Ok(()),
+        None => {
+            let _ = request.reject().await;
+            return Ok(());
+        }
     };
 
     let mut file_path = PathBuf::from(folder);
     file_path.push(request.file_name());
-    let file = fs::File::create(file_path).await?;
+    let file = match fs::File::create(file_path).await {
+        Ok(file) => file,
+        Err(err) => {
+            let _ = request.reject().await;
+            return Err(err.into());
+        }
+    };
 
     {
         let backend_to_ui = backend_to_ui.clone();

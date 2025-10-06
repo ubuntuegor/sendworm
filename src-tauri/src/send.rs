@@ -91,7 +91,10 @@ async fn send_file_or_folder_impl(
 
     match ui_to_backend.recv().await {
         Some(SendCommand::Confirm) => {}
-        None => return Ok(()),
+        None => {
+            let _ = wormhole.close().await;
+            return Ok(());
+        }
     }
 
     {

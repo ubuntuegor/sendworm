@@ -12,8 +12,10 @@
     mockConfirmReceive,
     mockReceiveFile,
   } from "$lib/mocks/receive"
-  import { basename, downloadDir } from "@tauri-apps/api/path"
+  import { basename } from "@tauri-apps/api/path"
   import FileInfoBlock from "./FileInfoBlock.svelte"
+  import { getReceiveFolder, setReceiveFolder } from "$lib/settings"
+  import { open } from "@tauri-apps/plugin-dialog"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -57,7 +59,7 @@
     fileInfo = null
     centerState = { state: "loading" }
 
-    downloadDir().then((path) => {
+    getReceiveFolder().then((path) => {
       folder = path
     })
 
@@ -70,9 +72,13 @@
 
   $effect(() => {
     if (folder === null) return
-    basename(folder).then((baseName) => {
-      folderName = baseName
-    })
+    basename(folder)
+      .then((baseName) => {
+        folderName = baseName
+      })
+      .catch((_) => {
+        folderName = folder
+      })
   })
 
   async function receiveFile(code: string) {
@@ -139,6 +145,17 @@
     }
   }
 
+  async function selectFolder() {
+    const path = await open({
+      directory: true,
+    })
+
+    if (path) {
+      folder = path
+      setReceiveFolder(path)
+    }
+  }
+
   function cancelAndGoBack() {
     cancelReceive()
     goBack()
@@ -163,8 +180,27 @@
         class="center-variant confirmation-block"
         transition:scale={{ duration: 200, easing: quadOut }}
       >
-        <p>Saving file to: {folder}</p>
-        <button onclick={confirmReceive} disabled={folder === null}>
+        <p>Save to this folder</p>
+        <button
+          class="folder-chooser"
+          title={folder}
+          aria-label="Click to choose folder. Current folder is {folderName}"
+          onclick={selectFolder}
+        >
+          <span class="text">{folderName}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="currentColor"
+              d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h6l2 2h8q.825 0 1.413.588T22 8v10q0 .825-.587 1.413T20 20zm0-2h16V8h-8.825l-2-2H4zm0 0V6z"
+            />
+          </svg>
+        </button>
+        <button class="continue-button" onclick={confirmReceive}>
           Continue
         </button>
       </div>
@@ -257,14 +293,48 @@
   }
 
   .confirmation-block {
-    gap: 12px;
-
     p {
+      margin-bottom: 4px;
       font-size: 12px;
       opacity: 0.5;
     }
 
-    button {
+    .folder-chooser {
+      margin-bottom: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      width: 220px;
+      height: 32px;
+      padding: 0px 11px;
+      border: solid 1px rgba(255, 224, 181, 0.25);
+      border-radius: 12px;
+      box-sizing: border-box;
+
+      background-color: #1d1b18;
+      transition: border ease 0.1s;
+
+      text-align: left;
+      font-size: 14px;
+
+      &:hover:not(:active) {
+        border: solid 1px rgba(255, 224, 181, 0.75);
+      }
+
+      .text {
+        flex: 1 1 auto;
+        padding-bottom: 2px;
+
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+
+      svg {
+        flex: 0 0 auto;
+      }
+    }
+
+    .continue-button {
       cursor: pointer;
       min-width: 160px;
       text-align: center;

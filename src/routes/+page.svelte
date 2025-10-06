@@ -62,19 +62,19 @@
   }
 
   async function selectAndSendFile() {
-    const filePath = await open({
+    const path = await open({
       multiple: false,
     })
 
-    if (filePath) sendFileOrFolder(filePath)
+    if (path) sendFileOrFolder(path)
   }
 
   async function selectAndSendFolder() {
-    const filePath = await open({
+    const path = await open({
       directory: true,
     })
 
-    if (filePath) sendFileOrFolder(filePath)
+    if (path) sendFileOrFolder(path)
   }
 
   function receiveFile(code: string) {
