@@ -87,7 +87,18 @@
   function goToIdle() {
     myState = { state: "idle" }
   }
+
+  function preventContextMenu(e: MouseEvent) {
+    const target = e.target as HTMLElement
+    if (target.nodeName == "INPUT" && target.getAttribute("type") == "text") {
+      return
+    }
+
+    e.preventDefault()
+  }
 </script>
+
+<svelte:window oncontextmenu={preventContextMenu} />
 
 <main>
   {#if myState.state === "idle" || myState.state === "sending"}
