@@ -312,7 +312,7 @@
       box-sizing: border-box;
 
       background-color: #1d1b18;
-      transition: border ease 0.1s;
+      transition: border ease-out 0.1s;
 
       text-align: left;
       font-size: 14px;
@@ -346,7 +346,7 @@
       padding-top: 5px;
       padding-bottom: 6px;
 
-      transition: background-color ease 0.1s;
+      transition: background-color ease-out 0.1s;
 
       &:hover {
         background-color: #ffe6c3;

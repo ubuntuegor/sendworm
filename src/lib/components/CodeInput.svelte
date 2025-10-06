@@ -154,6 +154,8 @@
       border: solid 1px rgba(255, 224, 181, 0.25);
       border-radius: 12px;
 
+      transition: border ease-out 0.1s;
+
       font-weight: 300;
       font-size: 14px;
 
@@ -184,8 +186,8 @@
       border-radius: 50%;
 
       transition:
-        opacity ease 0.1s,
-        background-color ease 0.1s;
+        opacity ease-out 0.1s,
+        background-color ease-out 0.1s;
 
       &[disabled] {
         opacity: 0.5;
@@ -239,7 +241,7 @@
       font-weight: 300;
       color: rgba(255, 224, 181, 0.8);
 
-      transition: background-color ease 0.1s;
+      transition: background-color ease-out 0.1s;
 
       &:hover {
         background-color: rgba(255, 224, 181, 0.15);

@@ -343,7 +343,7 @@
       color: #202943;
       font-weight: 500;
       font-size: 14px;
-      transition: background-color ease 0.1s;
+      transition: background-color ease-out 0.1s;
 
       span {
         margin-bottom: 2px;

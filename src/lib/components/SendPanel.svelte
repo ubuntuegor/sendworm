@@ -383,7 +383,7 @@
       padding-top: 5px;
       padding-bottom: 6px;
 
-      transition: background-color ease 0.1s;
+      transition: background-color ease-out 0.1s;
 
       &:hover {
         background-color: #e6ecff;
