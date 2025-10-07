@@ -310,6 +310,7 @@
     .code-box {
       position: relative;
       user-select: text;
+      -webkit-user-select: text;
       box-sizing: border-box;
       min-width: 220px;
       padding: 32px;

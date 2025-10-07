@@ -3,6 +3,7 @@ body {
   overflow: hidden;
   font-family: "Clear Sans", system-ui;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 button {
