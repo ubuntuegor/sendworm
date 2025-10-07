@@ -1,7 +1,9 @@
-# Tauri + SvelteKit + TypeScript
+# Sendworm
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+Cross-platform desktop app to share files using [Magic Wormhole](https://magic-wormhole.readthedocs.io/en/latest/welcome.html).
 
-## Recommended IDE Setup
+**[Download](https://github.com/ubuntuegor/sendworm/releases/latest)**
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+## Screenshots
+
+<img width="800" alt="Sending screen" src="https://github.com/user-attachments/assets/31aeb488-9eeb-41c7-878e-855f38c3e168" />
