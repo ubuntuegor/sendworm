@@ -5,6 +5,7 @@
   import FolderIcon from "$lib/icons/FolderIcon.svelte"
   import ReceiveIcon from "$lib/icons/ReceiveIcon.svelte"
   import SendIcon from "$lib/icons/SendIcon.svelte"
+  import { initializeMenu } from "$lib/menu"
   import { shrink } from "$lib/transitions"
   import { basename } from "@tauri-apps/api/path"
   import { getCurrentWindow } from "@tauri-apps/api/window"
@@ -41,6 +42,14 @@
       return `Receiving ${myState.fileName || "file"}`
     } else {
       return "Sendworm"
+    }
+  })
+
+  $effect(() => {
+    const unlisten = initializeMenu()
+
+    return () => {
+      unlisten()
     }
   })
 

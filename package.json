@@ -17,6 +17,7 @@
     "@tauri-apps/plugin-clipboard-manager": "^2",
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-os": "^2",
     "@tauri-apps/plugin-store": "^2",
     "qrcode": "^1"
   },

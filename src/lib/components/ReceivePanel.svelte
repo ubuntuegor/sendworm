@@ -14,7 +14,12 @@
   } from "$lib/mocks/receive"
   import { basename } from "@tauri-apps/api/path"
   import FileInfoBlock from "./FileInfoBlock.svelte"
-  import { getReceiveFolder, setReceiveFolder } from "$lib/settings"
+  import {
+    getAskBeforeReceive,
+    getReceiveFolder,
+    onReceiveFolderChange,
+    setReceiveFolder,
+  } from "$lib/settings"
   import { open } from "@tauri-apps/plugin-dialog"
   import FolderIcon from "$lib/icons/FolderIcon.svelte"
 
@@ -73,6 +78,16 @@
   })
 
   $effect(() => {
+    const unlistenPromise = onReceiveFolderChange((newFolder) => {
+      folder = newFolder ?? null
+    })
+
+    return () => {
+      unlistenPromise.then((unlisten) => unlisten())
+    }
+  })
+
+  $effect(() => {
     if (folder === null) return
     basename(folder)
       .then((baseName) => {
@@ -90,10 +105,15 @@
     } else {
       onEvent = new Channel<ReceiveEvent>()
     }
-    onEvent.onmessage = (message) => {
+    onEvent.onmessage = async (message) => {
       switch (message.event) {
         case "fileInfo":
-          centerState = { state: "confirmation" }
+          if (await getAskBeforeReceive()) {
+            centerState = { state: "confirmation" }
+          } else {
+            confirmReceive()
+          }
+
           fileInfo = message.data
           onFileInfo(message.data)
           break
@@ -154,7 +174,6 @@
     })
 
     if (path) {
-      folder = path
       setReceiveFolder(path)
     }
   }

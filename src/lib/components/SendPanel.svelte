@@ -17,6 +17,7 @@
   import { MockChannel } from "$lib/mocks/common"
   import FileInfoBlock from "./FileInfoBlock.svelte"
   import ClipboardIcon from "$lib/icons/ClipboardIcon.svelte"
+  import { getAskBeforeSend } from "$lib/settings"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -92,13 +93,17 @@
     } else {
       onEvent = new Channel<SendEvent>()
     }
-    onEvent.onmessage = (message) => {
+    onEvent.onmessage = async (message) => {
       switch (message.event) {
         case "code":
           centerState = { state: "code", code: message.data.code }
           break
         case "connected":
-          centerState = { state: "confirmation" }
+          if (await getAskBeforeSend()) {
+            centerState = { state: "confirmation" }
+          } else {
+            confirmSend()
+          }
           break
         case "transitInfo":
           if (centerState.state === "progress") {
