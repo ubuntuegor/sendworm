@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ChevronRightIcon from "$lib/icons/ChevronRightIcon.svelte"
   import { scaleVertically } from "$lib/transitions"
   import { invoke } from "@tauri-apps/api/core"
 
@@ -103,14 +104,7 @@
     bind:this={codeField}
   />
   <button type="submit" aria-label="Receive file" disabled={code === ""}>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-    >
-      <path fill="currentColor" d="M12.6 12L8 7.4L9.4 6l6 6l-6 6L8 16.6z" />
-    </svg>
+    <ChevronRightIcon size={24} />
   </button>
 
   {#if completions.length > 0}
@@ -178,8 +172,10 @@
       flex: 0 0 auto;
       width: 32px;
       height: 32px;
+      box-sizing: border-box;
       display: grid;
       place-content: center;
+      padding-left: 2px;
 
       background-color: #ffe0b5;
       color: #131210;
@@ -200,10 +196,6 @@
 
       &:active:not([disabled]) {
         background-color: #e3c396;
-      }
-
-      svg {
-        margin-left: 2px;
       }
     }
   }

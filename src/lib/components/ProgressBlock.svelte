@@ -1,4 +1,5 @@
 <script lang="ts">
+  import DoneIcon from "$lib/icons/DoneIcon.svelte"
   import type { TransitInfo } from "$lib/types/common"
   import { formatSize } from "$lib/utils/files"
   import { quadOut } from "svelte/easing"
@@ -55,17 +56,7 @@
     </div>
   {:else}
     <div class="done-icon">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="54"
-        height="54"
-        viewBox="0 0 24 24"
-      >
-        <path
-          fill="currentColor"
-          d="m9.55 18l-5.7-5.7l1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"
-        />
-      </svg>
+      <DoneIcon size={54} />
     </div>
   {/if}
 </div>

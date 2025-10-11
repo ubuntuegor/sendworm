@@ -1,4 +1,6 @@
 <script lang="ts">
+  import FolderIcon from "$lib/icons/FolderIcon.svelte"
+  import FileIcon from "$lib/icons/FileIcon.svelte"
   import { formatSize } from "$lib/utils/files"
 
   interface Props {
@@ -13,31 +15,13 @@
 </script>
 
 <div class="file-info">
-  {#if isDir}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-    >
-      <path
-        fill="currentColor"
-        d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h6l2 2h8q.825 0 1.413.588T22 8v10q0 .825-.587 1.413T20 20zm0-2h16V8h-8.825l-2-2H4zm0 0V6z"
-      />
-    </svg>
-  {:else}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-    >
-      <path
-        fill="currentColor"
-        d="M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h8l6 6v12q0 .825-.587 1.413T18 22zm7-13V4H6v16h12V9zM6 4v5zv16z"
-      />
-    </svg>
-  {/if}
+  <div class="icon">
+    {#if isDir}
+      <FolderIcon size={24} />
+    {:else}
+      <FileIcon size={24} />
+    {/if}
+  </div>
 
   <div class="name-and-more">
     <p class="sub-title">
@@ -58,7 +42,7 @@
     align-items: center;
     gap: 12px;
 
-    svg {
+    .icon {
       flex: 0 0 auto;
     }
 

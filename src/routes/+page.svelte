@@ -2,6 +2,9 @@
   import CodeInput from "$lib/components/CodeInput.svelte"
   import ReceivePanel from "$lib/components/ReceivePanel.svelte"
   import SendPanel from "$lib/components/SendPanel.svelte"
+  import FolderIcon from "$lib/icons/FolderIcon.svelte"
+  import ReceiveIcon from "$lib/icons/ReceiveIcon.svelte"
+  import SendIcon from "$lib/icons/SendIcon.svelte"
   import { shrink } from "$lib/transitions"
   import { basename } from "@tauri-apps/api/path"
   import { getCurrentWindow } from "@tauri-apps/api/window"
@@ -142,33 +145,13 @@
         >
           <div class="drop-border"></div>
           <div class="top-half">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="96"
-              height="96"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="M11 16V7.85l-2.6 2.6L7 9l5-5l5 5l-1.4 1.45l-2.6-2.6V16zm-5 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"
-              />
-            </svg>
+            <SendIcon size={96} />
           </div>
           <div class="bottom-half">
             <h2>Drag a file here</h2>
             <p class="sub-text">or click to select a file</p>
             <button class="send-folder-button" onclick={selectAndSendFolder}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="currentColor"
-                  d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h6l2 2h8q.825 0 1.413.588T22 8v10q0 .825-.587 1.413T20 20zm0-2h16V8h-8.825l-2-2H4zm0 0V6z"
-                />
-              </svg>
+              <FolderIcon size={16} />
               <span>Select folder</span>
             </button>
           </div>
@@ -202,17 +185,7 @@
           out:fade|global={{ duration: fadeDuration }}
         >
           <div class="top-half">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="96"
-              height="96"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"
-              />
-            </svg>
+            <ReceiveIcon size={96} />
           </div>
           <div class="bottom-half">
             <h2>Enter code to receive</h2>
