@@ -1,10 +1,12 @@
-use std::{path::Path, sync::Mutex};
+use std::sync::Mutex;
 
 use magic_wormhole::{transfer, transit, MailboxConnection, Wormhole, WormholeError};
 use serde::Serialize;
 use tauri::{ipc::Channel, State};
 use thiserror::Error;
-use tokio::{fs, sync::mpsc};
+use tokio::sync::mpsc;
+
+use crate::file_utils::compute_file_name;
 
 pub enum SendCommand {
     Confirm,
@@ -38,29 +40,8 @@ enum SendError {
     WormholeError(#[from] magic_wormhole::WormholeError),
     #[error("Transfer error: {}", .0)]
     TransferError(#[from] magic_wormhole::transfer::TransferError),
-}
-
-#[tauri::command]
-pub fn compute_file_name(file_path: &str) -> Option<String> {
-    Path::new(&file_path)
-        .file_name()
-        .and_then(|x| x.to_str())
-        .map(|x| x.to_string())
-}
-
-#[tauri::command]
-pub async fn get_file_size(file_path: String) -> Option<u64> {
-    let metadata = fs::metadata(file_path).await.ok()?;
-    if !metadata.is_dir() {
-        metadata.len().into()
-    } else {
-        None
-    }
-}
-
-#[tauri::command]
-pub async fn is_folder(file_path: String) -> Option<bool> {
-    fs::metadata(file_path).await.ok()?.is_dir().into()
+    #[error("Transfer canceled")]
+    Canceled,
 }
 
 async fn create_wormhole(
@@ -83,7 +64,7 @@ async fn send_file_or_folder_impl(
             wormhole?
         }
         _ = async { while ui_to_backend.recv().await.is_some() {} } => {
-            return Ok(())
+            return Err(SendError::Canceled);
         }
     };
 
@@ -93,12 +74,13 @@ async fn send_file_or_folder_impl(
         Some(SendCommand::Confirm) => {}
         None => {
             let _ = wormhole.close().await;
-            return Ok(());
+            return Err(SendError::Canceled);
         }
     }
 
+    let mut was_canceled = false;
+
     {
-        let backend_to_ui = backend_to_ui.clone();
         let backend_to_ui2 = backend_to_ui.clone();
         let relay_hint =
             transit::RelayHint::from_urls(None, [transit::DEFAULT_RELAY_SERVER.parse().unwrap()])
@@ -128,12 +110,19 @@ async fn send_file_or_folder_impl(
                     .send(SendEvent::Progress { sent, total })
                     .unwrap();
             },
-            async { while ui_to_backend.recv().await.is_some() {} },
+            async {
+                while ui_to_backend.recv().await.is_some() {}
+                was_canceled = true;
+            },
         )
         .await?;
     }
 
-    Ok(())
+    if was_canceled {
+        Err(SendError::Canceled)
+    } else {
+        Ok(())
+    }
 }
 
 #[tauri::command]
@@ -149,6 +138,7 @@ pub async fn send_file_or_folder(
     }
 
     match send_file_or_folder_impl(file_path, on_event.clone(), r).await {
+        Err(SendError::Canceled) => {}
         Err(error) => {
             on_event
                 .send(SendEvent::Error {

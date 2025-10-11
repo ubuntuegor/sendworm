@@ -41,6 +41,8 @@ enum ReceiveError {
     ParseCodeError(#[from] magic_wormhole::ParseCodeError),
     #[error("Failed to create file: {}", .0)]
     FileCreateError(#[from] std::io::Error),
+    #[error("Transfer canceled")]
+    Canceled,
 }
 
 async fn connect_wormhole(code: Code) -> Result<Wormhole, WormholeError> {
@@ -61,7 +63,7 @@ async fn receive_file_impl(
             wormhole?
         }
         _ = async { while ui_to_backend.recv().await.is_some() {} } => {
-            return Ok(())
+            return Err(ReceiveError::Canceled);
         }
     };
 
@@ -77,7 +79,7 @@ async fn receive_file_impl(
     let request = match request {
         Some(r) => r,
         None => {
-            return Ok(());
+            return Err(ReceiveError::Canceled);
         }
     };
 
@@ -92,7 +94,7 @@ async fn receive_file_impl(
         Some(ReceiveCommand::Confirm { folder }) => folder,
         None => {
             let _ = request.reject().await;
-            return Ok(());
+            return Err(ReceiveError::Canceled);
         }
     };
 
@@ -106,8 +108,9 @@ async fn receive_file_impl(
         }
     };
 
+    let mut was_canceled = false;
+
     {
-        let backend_to_ui = backend_to_ui.clone();
         let backend_to_ui2 = backend_to_ui.clone();
 
         request
@@ -132,12 +135,19 @@ async fn receive_file_impl(
                         .unwrap();
                 },
                 &mut file.compat_write(),
-                async { while ui_to_backend.recv().await.is_some() {} },
+                async {
+                    while ui_to_backend.recv().await.is_some() {}
+                    was_canceled = true;
+                },
             )
             .await?;
     }
 
-    Ok(())
+    if was_canceled {
+        Err(ReceiveError::Canceled)
+    } else {
+        Ok(())
+    }
 }
 
 #[tauri::command]
@@ -153,6 +163,7 @@ pub async fn receive_file(
     }
 
     match receive_file_impl(code, on_event.clone(), r).await {
+        Err(ReceiveError::Canceled) => {}
         Err(error) => {
             on_event
                 .send(ReceiveEvent::Error {

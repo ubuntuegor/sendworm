@@ -5,6 +5,7 @@ use tauri_plugin_prevent_default::Flags;
 use tokio::runtime;
 
 mod completion;
+mod file_utils;
 mod receive;
 mod send;
 
@@ -45,9 +46,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_tasks_number,
             completion::get_completions,
-            send::compute_file_name,
-            send::get_file_size,
-            send::is_folder,
+            file_utils::compute_file_name,
+            file_utils::get_file_size,
+            file_utils::is_folder,
             send::send_file_or_folder,
             send::confirm_send,
             send::cancel_send,
