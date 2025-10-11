@@ -109,7 +109,9 @@
     }
 
     .done-icon {
-      margin-top: 16px;
+      display: grid;
+      place-content: center;
+      margin-top: 6px;
       color: var(--filling-color);
     }
   }
