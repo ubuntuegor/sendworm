@@ -11,6 +11,14 @@
     "dialog:default",
     "clipboard-manager:allow-write-text",
     "store:default",
-    "os:default"
+    "os:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    }
   ]
 }

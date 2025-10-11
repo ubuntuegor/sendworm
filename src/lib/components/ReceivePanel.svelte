@@ -12,7 +12,7 @@
     mockConfirmReceive,
     mockReceiveFile,
   } from "$lib/mocks/receive"
-  import { basename } from "@tauri-apps/api/path"
+  import { basename, join } from "@tauri-apps/api/path"
   import FileInfoBlock from "./FileInfoBlock.svelte"
   import {
     getAskBeforeReceive,
@@ -22,6 +22,9 @@
   } from "$lib/settings"
   import { open } from "@tauri-apps/plugin-dialog"
   import FolderIcon from "$lib/icons/FolderIcon.svelte"
+  import { scaleVertically } from "$lib/transitions"
+  import { openPath } from "@tauri-apps/plugin-opener"
+  import { revealItemInDir } from "@tauri-apps/plugin-opener"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -178,6 +181,16 @@
     }
   }
 
+  async function openReceivedFile() {
+    const filePath = await join(folder!, fileInfo!.fileName)
+    openPath(filePath)
+  }
+
+  async function revealReceivedFile() {
+    const filePath = await join(folder!, fileInfo!.fileName)
+    revealItemInDir(filePath)
+  }
+
   function cancelAndGoBack() {
     cancelReceive()
     goBack()
@@ -241,6 +254,17 @@
         {...fileInfo}
         fileNameTooltip={fileInfo.fileName}
       />
+      {#if centerState.state === "progress" && centerState.finished}
+        <div
+          class="file-open-buttons"
+          transition:scaleVertically={{ duration: 100, easing: quadOut }}
+        >
+          <button class="open-button" onclick={openReceivedFile}>Open</button>
+          <button class="reveal-button" onclick={revealReceivedFile}>
+            Reveal
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
   <div class="bottom">
@@ -276,7 +300,72 @@
     left: 0px;
     right: 0px;
     display: grid;
-    place-content: center;
+    justify-items: center;
+    grid-template-rows: auto auto;
+  }
+
+  .file-open-buttons {
+    margin-top: 16px;
+    width: 340px;
+    display: flex;
+    gap: 6px;
+
+    transform-origin: top;
+
+    button {
+      flex: 1 1 100%;
+    }
+
+    .open-button {
+      cursor: pointer;
+      text-align: center;
+      font-size: 14px;
+      background-color: #ffe0b5;
+      color: #131210;
+      border-radius: 8px;
+      padding: 8px;
+      padding-top: 5px;
+      padding-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      transition: background-color ease-out 0.1s;
+
+      &:hover {
+        background-color: #ffe6c3;
+      }
+
+      &:active {
+        background-color: #e3c396;
+      }
+    }
+
+    .reveal-button {
+      cursor: pointer;
+      text-align: center;
+      font-size: 14px;
+      background-color: #131210;
+      border: solid 1px rgba(255, 224, 181, 0.25);
+      border-radius: 8px;
+      padding: 8px;
+      padding-top: 5px;
+      padding-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      transition:
+        background-color ease-out 0.1s,
+        border ease-out 0.1s;
+
+      &:hover:not(:active) {
+        border: solid 1px rgba(255, 224, 181, 0.5);
+        background-color: #1e1c19;
+      }
+
+      &:active {
+        background-color: #0a0909;
+      }
+    }
   }
 
   .bottom {
