@@ -59,4 +59,5 @@ jobs:
           releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
+          uploadPlainBinary: true
           args: ${{ matrix.args }}
