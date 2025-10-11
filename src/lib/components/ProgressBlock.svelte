@@ -2,6 +2,7 @@
   import DoneIcon from "$lib/icons/DoneIcon.svelte"
   import type { TransitInfo } from "$lib/types/common"
   import { formatSize } from "$lib/utils/files"
+  import { getCurrentWindow, ProgressBarStatus } from "@tauri-apps/api/window"
   import { quadOut } from "svelte/easing"
   import { fade, scale } from "svelte/transition"
 
@@ -21,6 +22,21 @@
     if (finished) return 100
     if (!progress) return 0
     return Math.floor((progress[0] / progress[1]) * 100)
+  })
+
+  $effect(() => {
+    getCurrentWindow().setProgressBar({
+      status: error ? ProgressBarStatus.Error : ProgressBarStatus.Normal,
+      progress: percentage,
+    })
+  })
+
+  $effect(() => {
+    return () => {
+      getCurrentWindow().setProgressBar({
+        status: ProgressBarStatus.None,
+      })
+    }
   })
 
   const subText = $derived.by(() => {
