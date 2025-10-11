@@ -19,10 +19,11 @@ import {
 } from "./settings"
 import { platform } from "@tauri-apps/plugin-os"
 import { getCurrentWindow } from "@tauri-apps/api/window"
+import type { UnlistenFn } from "@tauri-apps/api/event"
 
 export function initializeMenu() {
   const myPromise = (async function () {
-    const unlistens = []
+    const unlistens: Promise<UnlistenFn>[] = []
 
     const askBeforeSend = await CheckMenuItem.new({
       text: "Ask for confirmation before sending",
@@ -99,6 +100,20 @@ export function initializeMenu() {
               },
             }),
           ],
+        })
+      )
+
+      async function closeWindowListener(event: KeyboardEvent) {
+        if (event.code === "KeyW" && event.metaKey) {
+          await getCurrentWindow().close()
+        }
+      }
+
+      window.addEventListener("keydown", closeWindowListener)
+
+      unlistens.push(
+        Promise.resolve(() => {
+          window.removeEventListener("keydown", closeWindowListener)
         })
       )
     }
