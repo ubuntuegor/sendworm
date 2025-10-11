@@ -48,6 +48,7 @@
         state: "progress"
         progress: [number, number] | null
         transitInfo: TransitInfo | null
+        finalFolder: string
         finished: boolean
       }
 
@@ -69,15 +70,17 @@
     fileInfo = null
     centerState = { state: "loading" }
 
-    getReceiveFolder().then((path) => {
-      folder = path
-    })
-
     receiveFile(code)
 
     return () => {
       cancelReceive()
     }
+  })
+
+  $effect(() => {
+    getReceiveFolder().then((path) => {
+      folder = path
+    })
   })
 
   $effect(() => {
@@ -153,6 +156,7 @@
       state: "progress",
       progress: null,
       transitInfo: null,
+      finalFolder: folder!,
       finished: false,
     }
 
@@ -182,13 +186,17 @@
   }
 
   async function openReceivedFile() {
-    const filePath = await join(folder!, fileInfo!.fileName)
-    openPath(filePath)
+    if (centerState.state === "progress") {
+      const filePath = await join(centerState.finalFolder, fileInfo!.fileName)
+      openPath(filePath)
+    }
   }
 
   async function revealReceivedFile() {
-    const filePath = await join(folder!, fileInfo!.fileName)
-    revealItemInDir(filePath)
+    if (centerState.state === "progress") {
+      const filePath = await join(centerState.finalFolder, fileInfo!.fileName)
+      revealItemInDir(filePath)
+    }
   }
 
   function cancelAndGoBack() {
