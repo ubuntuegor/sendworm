@@ -18,6 +18,7 @@ import {
   setReceiveFolder,
 } from "./settings"
 import { platform } from "@tauri-apps/plugin-os"
+import { getCurrentWindow } from "@tauri-apps/api/window"
 
 export function initializeMenu() {
   const myPromise = (async function () {
@@ -86,7 +87,20 @@ export function initializeMenu() {
 
     if (platform() === "macos") {
       // filler item because in macos first submenu goes into the "application name" menu
-      menuItems.push(await Submenu.new({ text: "About" }))
+      menuItems.push(
+        await Submenu.new({
+          text: "About",
+          items: [
+            await MenuItem.new({
+              text: "Quit",
+              accelerator: "Cmd+Q",
+              action: async () => {
+                await getCurrentWindow().close()
+              },
+            }),
+          ],
+        })
+      )
     }
 
     menuItems.push(
