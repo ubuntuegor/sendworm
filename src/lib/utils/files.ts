@@ -4,12 +4,6 @@ export async function isFolder(filePath: string): Promise<boolean> {
   return (await invoke("is_folder", { filePath })) || false
 }
 
-export async function computeFileName(
-  filePath: string
-): Promise<string | null> {
-  return await invoke("compute_file_name", { filePath })
-}
-
 export async function getFileSize(filePath: string): Promise<number | null> {
   return await invoke("get_file_size", { filePath })
 }

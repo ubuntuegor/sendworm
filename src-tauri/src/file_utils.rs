@@ -1,14 +1,4 @@
-use std::path::Path;
-
 use tokio::fs;
-
-#[tauri::command]
-pub fn compute_file_name(file_path: &str) -> Option<String> {
-    Path::new(&file_path)
-        .file_name()
-        .and_then(|x| x.to_str())
-        .map(|x| x.to_string())
-}
 
 #[tauri::command]
 pub async fn get_file_size(file_path: String) -> Option<u64> {

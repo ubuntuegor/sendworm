@@ -11,13 +11,14 @@
   import { fade, scale } from "svelte/transition"
   import QRCode from "qrcode"
   import { quadOut } from "svelte/easing"
-  import { computeFileName, getFileSize, isFolder } from "$lib/utils/files"
+  import { getFileSize, isFolder } from "$lib/utils/files"
   import Spinner from "./Spinner.svelte"
   import ProgressBlock from "./ProgressBlock.svelte"
   import { MockChannel } from "$lib/mocks/common"
   import FileInfoBlock from "./FileInfoBlock.svelte"
   import ClipboardIcon from "$lib/icons/ClipboardIcon.svelte"
   import { getAskBeforeSend } from "$lib/settings"
+  import { basename } from "@tauri-apps/api/path"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -224,7 +225,7 @@
     {/if}
   </div>
   <div class="top">
-    {#await Promise.all( [computeFileName(filePath), getFileSize(filePath), isFolder(filePath)] ) then [fileName, fileSize, isDir]}
+    {#await Promise.all( [basename(filePath), getFileSize(filePath), isFolder(filePath)] ) then [fileName, fileSize, isDir]}
       <FileInfoBlock
         mode="send"
         {isDir}

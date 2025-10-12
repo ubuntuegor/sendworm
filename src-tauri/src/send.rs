@@ -1,12 +1,10 @@
-use std::sync::Mutex;
+use std::{path::Path, sync::Mutex};
 
 use magic_wormhole::{transfer, transit, MailboxConnection, Wormhole, WormholeError};
 use serde::Serialize;
 use tauri::{ipc::Channel, State};
 use thiserror::Error;
 use tokio::sync::mpsc;
-
-use crate::file_utils::compute_file_name;
 
 pub enum SendCommand {
     Confirm,
@@ -57,7 +55,10 @@ async fn send_file_or_folder_impl(
     backend_to_ui: Channel<SendEvent>,
     mut ui_to_backend: mpsc::Receiver<SendCommand>,
 ) -> Result<(), SendError> {
-    let file_name = compute_file_name(&file_path).unwrap();
+    let file_name = Path::new(&file_path)
+        .file_name()
+        .map(|x| x.to_string_lossy())
+        .unwrap();
 
     let wormhole = tokio::select! {
         wormhole = create_wormhole(|code| { backend_to_ui.send(SendEvent::Code { code }).unwrap(); }) => {
