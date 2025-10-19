@@ -61,3 +61,16 @@ jobs:
           prerelease: false
           uploadPlainBinary: true
           args: ${{ matrix.args }}
+
+      - name: build msix (windows only)
+        if: startsWith(matrix.platform, 'windows')
+        run: |
+          cd msix
+          .\Make-Package.ps1
+
+      - name: upload msix (windows only)
+        if: startsWith(matrix.platform, 'windows')
+        uses: actions/upload-artifact@v4
+        with:
+          name: msix
+          path: msix/*.msix
