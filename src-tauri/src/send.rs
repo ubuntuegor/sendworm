@@ -4,7 +4,8 @@ use magic_wormhole::{transfer, transit, MailboxConnection, Wormhole, WormholeErr
 use serde::Serialize;
 use tauri::{ipc::Channel, State};
 use thiserror::Error;
-use tokio::sync::mpsc;
+use tokio::{fs, sync::mpsc};
+use tokio_util::compat::TokioAsyncWriteCompatExt;
 
 pub enum SendCommand {
     Confirm,
@@ -38,6 +39,8 @@ enum SendError {
     WormholeError(#[from] magic_wormhole::WormholeError),
     #[error("Transfer error: {}", .0)]
     TransferError(#[from] magic_wormhole::transfer::TransferError),
+    #[error("Failed to read file: {}", .0)]
+    IOError(#[from] std::io::Error),
     #[error("Transfer canceled")]
     Canceled,
 }
@@ -57,8 +60,9 @@ async fn send_file_or_folder_impl(
 ) -> Result<(), SendError> {
     let file_name = Path::new(&file_path)
         .file_name()
-        .map(|x| x.to_string_lossy())
-        .unwrap();
+        .map(|x| x.to_string_lossy().to_string())
+        .unwrap_or("root".into());
+    let metadata = fs::metadata(&file_path).await?;
 
     let wormhole = tokio::select! {
         wormhole = create_wormhole(|code| { backend_to_ui.send(SendEvent::Code { code }).unwrap(); }) => {
@@ -86,37 +90,66 @@ async fn send_file_or_folder_impl(
         let relay_hint =
             transit::RelayHint::from_urls(None, [transit::DEFAULT_RELAY_SERVER.parse().unwrap()])
                 .unwrap();
-        transfer::send_file_or_folder(
-            wormhole,
-            vec![relay_hint],
-            &file_path,
-            file_name,
-            transit::Abilities::ALL,
-            |info| {
-                let connection_type = match info.conn_type {
-                    transit::ConnectionType::Direct => "direct",
-                    transit::ConnectionType::Relay { .. } => "relay",
-                    _ => "unknown",
+        let relay_hints = vec![relay_hint];
+        let transit_abilities = transit::Abilities::ALL;
+        let transit_handler = |info: transit::TransitInfo| {
+            let connection_type = match info.conn_type {
+                transit::ConnectionType::Direct => "direct",
+                transit::ConnectionType::Relay { .. } => "relay",
+                _ => "unknown",
+            }
+            .to_string();
+            backend_to_ui
+                .send(SendEvent::TransitInfo {
+                    connection_type,
+                    address: info.peer_addr.to_string(),
+                })
+                .unwrap();
+        };
+        let progress_handler = move |sent, total| {
+            backend_to_ui2
+                .send(SendEvent::Progress { sent, total })
+                .unwrap();
+        };
+        let cancel_future = async {
+            while ui_to_backend.recv().await.is_some() {}
+            was_canceled = true;
+        };
+
+        if metadata.is_dir() {
+            transfer::send_folder(
+                wormhole,
+                relay_hints,
+                file_path,
+                file_name,
+                transit_abilities,
+                transit_handler,
+                progress_handler,
+                cancel_future,
+            )
+            .await?;
+        } else {
+            let file_size = metadata.len();
+            let file = match fs::File::open(file_path).await {
+                Ok(file) => file,
+                Err(err) => {
+                    let _ = wormhole.close().await;
+                    return Err(err.into());
                 }
-                .to_string();
-                backend_to_ui
-                    .send(SendEvent::TransitInfo {
-                        connection_type,
-                        address: info.peer_addr.to_string(),
-                    })
-                    .unwrap();
-            },
-            move |sent, total| {
-                backend_to_ui2
-                    .send(SendEvent::Progress { sent, total })
-                    .unwrap();
-            },
-            async {
-                while ui_to_backend.recv().await.is_some() {}
-                was_canceled = true;
-            },
-        )
-        .await?;
+            };
+            transfer::send_file(
+                wormhole,
+                relay_hints,
+                &mut file.compat_write(),
+                file_name,
+                file_size,
+                transit_abilities,
+                transit_handler,
+                progress_handler,
+                cancel_future,
+            )
+            .await?;
+        }
     }
 
     if was_canceled {
