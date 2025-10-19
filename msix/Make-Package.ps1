@@ -18,6 +18,14 @@ $OutputFilename = "Sendworm-$Version-$Arch.msix"
 
 (Get-Content appxmanifest.template.xml).Replace('$VERSION$', $Version).Replace('$ARCH$', $Arch) | Out-File .\package\appxmanifest.xml
 
+$installationPath = vswhere.exe -latest -property installationPath
+if ($installationPath -and (test-path "$installationPath\Common7\Tools\vsdevcmd.bat")) {
+    & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -no_logo && set" | foreach-object {
+        $name, $value = $_ -split '=', 2
+        set-content env:\"$name" $value
+    }
+}
+
 Set-Location package
 
 makepri.exe createconfig /cf priconfig.xml /dq en-US
