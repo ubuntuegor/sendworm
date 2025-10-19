@@ -7,6 +7,7 @@
   import SendIcon from "$lib/icons/SendIcon.svelte"
   import { initializeMenu } from "$lib/menu"
   import { shrink } from "$lib/transitions"
+  import { invoke } from "@tauri-apps/api/core"
   import { basename } from "@tauri-apps/api/path"
   import { getCurrentWindow } from "@tauri-apps/api/window"
   import { open } from "@tauri-apps/plugin-dialog"
@@ -43,6 +44,14 @@
     } else {
       return "Sendworm"
     }
+  })
+
+  $effect(() => {
+    invoke("get_file_to_send").then((filePath) => {
+      if (filePath !== null) {
+        sendFileOrFolder(filePath as string)
+      }
+    })
   })
 
   $effect(() => {

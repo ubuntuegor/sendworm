@@ -33,3 +33,6 @@ tokio-util = { version = "0.7", features = ["compat"] }
 tauri-plugin-store = "2"
 tauri-plugin-prevent-default = "3"
 tauri-plugin-os = "2"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62.2", features= ["ApplicationModel_Activation", "ApplicationModel_DataTransfer_ShareTarget", "Storage"] }

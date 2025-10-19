@@ -6,6 +6,7 @@ use tokio::runtime;
 
 mod completion;
 mod file_utils;
+mod platform;
 mod receive;
 mod send;
 
@@ -49,6 +50,7 @@ pub fn run() {
             completion::get_completions,
             file_utils::get_file_size,
             file_utils::is_folder,
+            platform::get_file_to_send,
             send::send_file_or_folder,
             send::confirm_send,
             send::cancel_send,
