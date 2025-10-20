@@ -2,7 +2,9 @@
 
 Cross-platform desktop app to share files using [Magic Wormhole](https://magic-wormhole.readthedocs.io/en/latest/welcome.html).
 
-**[Download](https://github.com/ubuntuegor/sendworm/releases/latest)**
+**[Download binary](https://github.com/ubuntuegor/sendworm/releases/latest)**
+
+<a href="https://apps.microsoft.com/store/detail/9NDSF8H9P959?launch=true&mode=full"><img width=200 src="https://get.microsoft.com/images/en-us%20dark.svg"/></a>
 
 ## Screenshots
 
