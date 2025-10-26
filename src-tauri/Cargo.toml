@@ -40,3 +40,4 @@ windows = { version = "0.62", features= ["ApplicationModel_Activation", "Applica
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"
 percent-encoding = "2.3"
+ashpd = "0.12"

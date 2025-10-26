@@ -51,6 +51,8 @@ pub fn run() {
             file_utils::get_file_size,
             file_utils::is_folder,
             platform::get_file_to_send,
+            platform::open_file,
+            platform::reveal_file,
             send::send_file_or_folder,
             send::confirm_send,
             send::cancel_send,

@@ -23,8 +23,6 @@
   import { open } from "@tauri-apps/plugin-dialog"
   import FolderIcon from "$lib/icons/FolderIcon.svelte"
   import { scaleVertically } from "$lib/transitions"
-  import { openPath } from "@tauri-apps/plugin-opener"
-  import { revealItemInDir } from "@tauri-apps/plugin-opener"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -188,14 +186,14 @@
   async function openReceivedFile() {
     if (centerState.state === "progress") {
       const filePath = await join(centerState.finalFolder, fileInfo!.fileName)
-      openPath(filePath)
+      invoke("open_file", { filePath })
     }
   }
 
   async function revealReceivedFile() {
     if (centerState.state === "progress") {
       const filePath = await join(centerState.finalFolder, fileInfo!.fileName)
-      revealItemInDir(filePath)
+      invoke("reveal_file", { filePath })
     }
   }
 
