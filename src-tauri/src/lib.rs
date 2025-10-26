@@ -59,6 +59,7 @@ pub fn run() {
             receive::cancel_receive,
         ])
         .setup(|app| {
+            platform::customize_app(app);
             app.manage(Mutex::new(AppState::default()));
             Ok(())
         })

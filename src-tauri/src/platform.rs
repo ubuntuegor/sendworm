@@ -1,3 +1,7 @@
+use tauri::App;
+
+#[cfg(target_os = "linux")]
+mod gtk_drag_and_drop;
 #[cfg(target_os = "windows")]
 mod windows;
 
@@ -10,4 +14,11 @@ pub fn get_file_to_send() -> Option<String> {
     }
 
     None
+}
+
+pub fn customize_app(app: &mut App) {
+    #[cfg(target_os = "linux")]
+    {
+        gtk_drag_and_drop::connect(app);
+    }
 }
