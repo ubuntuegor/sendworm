@@ -52,6 +52,19 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.3" date="2025-10-29">
+      <url type="details">https://github.com/ubuntuegor/sendworm/releases/tag/v1.0.3</url>
+      <description>
+        <ul>
+          <li>Code suggestions can now be quickly selected with Tab in addition to arrow keys</li>
+          <li>Received files will now be renamed automatically if a file with such name already
+            exists</li>
+          <li>Provide an option to rename the file when choosing the destination folder</li>
+          <li>Save dialog will now pop-up by default on Linux, using it ensures that "Open" and
+            "Reveal" buttons will work correctly when using the flatpak distribution</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.2" date="2025-10-21">
       <url type="details">https://github.com/ubuntuegor/sendworm/releases/tag/v1.0.2</url>
       <description>
