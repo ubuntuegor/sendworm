@@ -12,7 +12,7 @@
     mockConfirmReceive,
     mockReceiveFile,
   } from "$lib/mocks/receive"
-  import { basename, dirname } from "@tauri-apps/api/path"
+  import { basename, dirname, join } from "@tauri-apps/api/path"
   import FileInfoBlock from "./FileInfoBlock.svelte"
   import {
     getAskBeforeReceive,
@@ -23,7 +23,7 @@
   import FolderIcon from "$lib/icons/FolderIcon.svelte"
   import { scaleVertically } from "$lib/transitions"
   import { platform } from "@tauri-apps/plugin-os"
-  import { computeNonexistingPath } from "$lib/utils/files"
+  import { computeNonexistingPath, getUIPath } from "$lib/utils/files"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -53,7 +53,8 @@
   let centerState: CenterState = $state({ state: "loading" })
   let fileInfo: FileInfo | null = $state(null)
   let resultFilePath: string | null = $state(null)
-  let resultFolderName: string | null = $state(null)
+  let uiFilePath: string | null = $state(null)
+  let uiFolderName: string | null = $state(null)
   let error: string | null = $state(null)
 
   let transferEnded = $derived.by(() => {
@@ -77,17 +78,37 @@
 
   $effect(() => {
     if (resultFilePath === null) return
-    let directory = "Unknown directory"
+
+    let folderName = "Unknown directory"
     dirname(resultFilePath)
       .then((dir) => {
-        directory = dir
-        return basename(dir)
+        folderName = dir
+        return getUIPath(dir)
       })
-      .then((dirName) => {
-        resultFolderName = dirName
+      .then((uiDir) => {
+        folderName = uiDir
+        return basename(uiDir)
+      })
+      .then((result) => {
+        uiFolderName = result
       })
       .catch((_) => {
-        resultFolderName = directory
+        uiFolderName = folderName
+      })
+
+    let filePath = resultFilePath
+    dirname(resultFilePath)
+      .then((dir) => {
+        return Promise.all([getUIPath(dir), basename(filePath)])
+      })
+      .then(([uiDir, fileName]) => {
+        return join(uiDir, fileName)
+      })
+      .then((result) => {
+        uiFilePath = result
+      })
+      .catch((_) => {
+        uiFilePath = filePath
       })
   })
 
@@ -239,11 +260,11 @@
         <p>Save to this folder</p>
         <button
           class="folder-chooser"
-          title={resultFilePath}
-          aria-label="Click to choose file path. Current folder for the file is {resultFolderName}"
+          title={uiFilePath}
+          aria-label="Click to choose file path. Current folder for the file is {uiFolderName}"
           onclick={selectReceivePath}
         >
-          <span class="text">{resultFolderName}</span>
+          <span class="text">{uiFolderName}</span>
           <span class="icon">
             <FolderIcon size={16} />
           </span>
@@ -280,8 +301,16 @@
           class="file-open-buttons"
           transition:scaleVertically={{ duration: 100, easing: quadOut }}
         >
-          <button class="open-button" onclick={openReceivedFile}>Open</button>
-          <button class="reveal-button" onclick={revealReceivedFile}>
+          <button
+            class="open-button"
+            onclick={openReceivedFile}
+            title={`Open ${uiFilePath}`}>Open</button
+          >
+          <button
+            class="reveal-button"
+            onclick={revealReceivedFile}
+            title={`Reveal ${uiFilePath} in file explorer`}
+          >
             Reveal
           </button>
         </div>

@@ -42,6 +42,18 @@ pub async fn reveal_file(file_path: String) {
     tauri_plugin_opener::reveal_item_in_dir(&file_path).unwrap();
 }
 
+/// Used to display real paths for paths shared with the Linux sandbox by Flatpak
+#[allow(unreachable_code)]
+#[tauri::command]
+pub fn get_non_sandboxed_path(path: String) -> String {
+    #[cfg(target_os = "linux")]
+    {
+        return linux::get_non_sandboxed_path_impl(path);
+    }
+
+    path
+}
+
 pub fn customize_app(app: &mut App) {
     #[cfg(target_os = "linux")]
     {

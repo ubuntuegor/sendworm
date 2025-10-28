@@ -11,7 +11,7 @@
   import { fade, scale } from "svelte/transition"
   import QRCode from "qrcode"
   import { quadOut } from "svelte/easing"
-  import { getFileSize, isFolder } from "$lib/utils/files"
+  import { getFileSize, getUIPath, isFolder } from "$lib/utils/files"
   import Spinner from "./Spinner.svelte"
   import ProgressBlock from "./ProgressBlock.svelte"
   import { MockChannel } from "$lib/mocks/common"
@@ -49,7 +49,14 @@
       }
 
   let centerState: CenterState = $state({ state: "loading" })
+  let uiFilePath: string | null = $state(null)
   let error: string | null = $state(null)
+
+  $effect(() => {
+    getUIPath(filePath).then((result) => {
+      uiFilePath = result
+    })
+  })
 
   let transferEnded = $derived.by(() => {
     return (
@@ -230,7 +237,7 @@
         mode="send"
         {isDir}
         {fileName}
-        fileNameTooltip={filePath}
+        fileNameTooltip={uiFilePath}
         {fileSize}
       />{/await}
   </div>

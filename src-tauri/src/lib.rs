@@ -54,6 +54,7 @@ pub fn run() {
             platform::get_file_to_send,
             platform::open_file,
             platform::reveal_file,
+            platform::get_non_sandboxed_path,
             send::send_file_or_folder,
             send::confirm_send,
             send::cancel_send,

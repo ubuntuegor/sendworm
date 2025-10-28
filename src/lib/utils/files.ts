@@ -28,3 +28,7 @@ export async function computeNonexistingPath(
 ): Promise<string> {
   return await invoke("compute_nonexisting_path", { folder, fileName })
 }
+
+export async function getUIPath(path: string): Promise<string> {
+  return await invoke("get_non_sandboxed_path", { path })
+}

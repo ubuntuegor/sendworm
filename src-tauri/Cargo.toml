@@ -41,3 +41,4 @@ windows = { version = "0.62", features= ["ApplicationModel_Activation", "Applica
 gtk = "0.18"
 percent-encoding = "2.3"
 ashpd = "0.12"
+xattr = "1"

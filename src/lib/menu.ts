@@ -20,6 +20,7 @@ import {
 import { platform } from "@tauri-apps/plugin-os"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import type { UnlistenFn } from "@tauri-apps/api/event"
+import { getUIPath } from "./utils/files"
 
 export function initializeMenu() {
   const myPromise = (async function () {
@@ -63,13 +64,14 @@ export function initializeMenu() {
     })
 
     const receiveFolder = await MenuItem.new({
-      text: await getReceiveFolder(),
+      text: await getUIPath(await getReceiveFolder()),
       enabled: false,
     })
 
     unlistens.push(
-      onReceiveFolderChange((newValue) => {
-        if (newValue !== undefined) receiveFolder.setText(newValue)
+      onReceiveFolderChange(async () => {
+        const folder = await getUIPath(await getReceiveFolder())
+        receiveFolder.setText(folder)
       })
     )
 
