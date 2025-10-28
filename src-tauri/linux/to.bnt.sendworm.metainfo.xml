@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2025 ubuntuegor -->
+<component type="desktop-application">
+  <id>to.bnt.sendworm</id>
+
+  <name>Sendworm</name>
+  <summary>Send files securely</summary>
+
+  <developer id="to.bnt">
+    <name>ubuntuegor</name>
+  </developer>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <url type="homepage">https://github.com/ubuntuegor/sendworm</url>
+  <url type="bugtracker">https://github.com/ubuntuegor/sendworm/issues</url>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#ffe071</color>
+    <color type="primary" scheme_preference="dark">#966e2e</color>
+  </branding>
+
+  <requires>
+    <display_length compare="ge">600</display_length>
+  </requires>
+
+  <content_rating type="oars-1.1" />
+
+  <description>
+    <p>
+      Send files securely using Magic Wormhole.
+    </p>
+    <p>
+      This is a cross-platform desktop app for sending files quickly and securely using the
+      magic-wormhole protocol, which makes it compatible with other tools that use magic-wormhole.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">Sendworm.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>
+        https://raw.githubusercontent.com/ubuntuegor/sendworm/refs/heads/main/src-tauri/linux/screenshots/main.png</image>
+      <caption>Main application screen.</caption>
+    </screenshot>
+    <screenshot>
+      <image>
+        https://raw.githubusercontent.com/ubuntuegor/sendworm/refs/heads/main/src-tauri/linux/screenshots/sending.png</image>
+      <caption>Sending screen.</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="1.0.2" date="2025-10-21">
+      <url type="details">https://github.com/ubuntuegor/sendworm/releases/tag/v1.0.2</url>
+      <description>
+        <ul>
+          <li>Changed window color to prevent blinking while the app's loading</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.1" date="2025-10-20">
+      <url type="details">https://github.com/ubuntuegor/sendworm/releases/tag/v1.0.1</url>
+      <description>
+        <ul>
+          <li>Disabled selecting UI text</li>
+          <li>Added ARM64 versions</li>
+          <li>Added settings</li>
+          <li>Added buttons to open or reveal a received file</li>
+          <li>Display progress in the taskbar/dock icon</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.0" date="2025-10-07">
+      <url type="details">https://github.com/ubuntuegor/sendworm/releases/tag/v1.0.0</url>
+      <description>
+        <p>Initial release</p>
+      </description>
+    </release>
+  </releases>
+</component>

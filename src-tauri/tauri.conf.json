@@ -28,8 +28,22 @@
   },
   "bundle": {
     "active": true,
-    "shortDescription": "Send files securely using Magic Wormhole.",
-    "targets": ["appimage", "dmg", "nsis"],
+    "shortDescription": "Send files securely using Magic Wormhole",
+    "targets": ["deb", "rpm", "dmg", "nsis"],
+    "linux": {
+      "deb": {
+        "desktopTemplate": "linux/Sendworm.desktop.hbs",
+        "files": {
+          "/usr/share/metainfo/to.bnt.sendworm.metainfo.xml": "linux/to.bnt.sendworm.metainfo.xml"
+        }
+      },
+      "rpm": {
+        "desktopTemplate": "linux/Sendworm.desktop.hbs",
+        "files": {
+          "/usr/share/metainfo/to.bnt.sendworm.metainfo.xml": "linux/to.bnt.sendworm.metainfo.xml"
+        }
+      }
+    },
     "windows": {
       "nsis": {
         "installMode": "perMachine"
