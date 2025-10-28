@@ -33,12 +33,14 @@
     "linux": {
       "deb": {
         "desktopTemplate": "linux/Sendworm.desktop.hbs",
+        "depends": ["xdg-desktop-portal"],
         "files": {
           "/usr/share/metainfo/to.bnt.sendworm.metainfo.xml": "linux/to.bnt.sendworm.metainfo.xml"
         }
       },
       "rpm": {
         "desktopTemplate": "linux/Sendworm.desktop.hbs",
+        "depends": ["xdg-desktop-portal"],
         "files": {
           "/usr/share/metainfo/to.bnt.sendworm.metainfo.xml": "linux/to.bnt.sendworm.metainfo.xml"
         }
