@@ -50,6 +50,7 @@ pub fn run() {
             completion::get_completions,
             file_utils::get_file_size,
             file_utils::is_folder,
+            file_utils::compute_nonexisting_path,
             platform::get_file_to_send,
             platform::open_file,
             platform::reveal_file,

@@ -21,3 +21,10 @@ export function formatSize(size: number): string {
 
   return `${size.toFixed(1)} PB`
 }
+
+export async function computeNonexistingPath(
+  folder: string,
+  fileName: string
+): Promise<string> {
+  return await invoke("compute_nonexisting_path", { folder, fileName })
+}

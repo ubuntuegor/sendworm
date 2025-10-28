@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Mutex};
+use std::sync::Mutex;
 
 use magic_wormhole::{transfer, transit, Code, MailboxConnection, Wormhole, WormholeError};
 use serde::Serialize;
@@ -8,7 +8,7 @@ use tokio::{fs, sync::mpsc};
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 
 pub enum ReceiveCommand {
-    Confirm { folder: String },
+    Confirm { file_path: String },
 }
 
 pub type ReceiveHandler = mpsc::Sender<ReceiveCommand>;
@@ -90,16 +90,14 @@ async fn receive_file_impl(
         })
         .unwrap();
 
-    let folder = match ui_to_backend.recv().await {
-        Some(ReceiveCommand::Confirm { folder }) => folder,
+    let file_path = match ui_to_backend.recv().await {
+        Some(ReceiveCommand::Confirm { file_path }) => file_path,
         None => {
             let _ = request.reject().await;
             return Err(ReceiveError::Canceled);
         }
     };
 
-    let mut file_path = PathBuf::from(folder);
-    file_path.push(request.file_name());
     let file = match fs::File::create(file_path).await {
         Ok(file) => file,
         Err(err) => {
@@ -180,11 +178,11 @@ pub async fn receive_file(
 }
 
 #[tauri::command]
-pub fn confirm_receive(state: State<'_, Mutex<crate::AppState>>, folder: String) {
+pub fn confirm_receive(state: State<'_, Mutex<crate::AppState>>, file_path: String) {
     let state = state.lock().unwrap();
     let handler = state.receive_task_handler.as_ref().unwrap();
     handler
-        .blocking_send(ReceiveCommand::Confirm { folder })
+        .blocking_send(ReceiveCommand::Confirm { file_path })
         .unwrap();
 }
 

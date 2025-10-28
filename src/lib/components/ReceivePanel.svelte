@@ -12,17 +12,18 @@
     mockConfirmReceive,
     mockReceiveFile,
   } from "$lib/mocks/receive"
-  import { basename, join } from "@tauri-apps/api/path"
+  import { basename, dirname } from "@tauri-apps/api/path"
   import FileInfoBlock from "./FileInfoBlock.svelte"
   import {
     getAskBeforeReceive,
     getReceiveFolder,
-    onReceiveFolderChange,
     setReceiveFolder,
   } from "$lib/settings"
-  import { open } from "@tauri-apps/plugin-dialog"
+  import { save } from "@tauri-apps/plugin-dialog"
   import FolderIcon from "$lib/icons/FolderIcon.svelte"
   import { scaleVertically } from "$lib/transitions"
+  import { platform } from "@tauri-apps/plugin-os"
+  import { computeNonexistingPath } from "$lib/utils/files"
 
   // Mock ongoing transfer to debug UI
   const MOCK = false
@@ -46,14 +47,13 @@
         state: "progress"
         progress: [number, number] | null
         transitInfo: TransitInfo | null
-        finalFolder: string
         finished: boolean
       }
 
   let centerState: CenterState = $state({ state: "loading" })
   let fileInfo: FileInfo | null = $state(null)
-  let folder: string | null = $state(null)
-  let folderName: string | null = $state(null)
+  let resultFilePath: string | null = $state(null)
+  let resultFolderName: string | null = $state(null)
   let error: string | null = $state(null)
 
   let transferEnded = $derived.by(() => {
@@ -76,29 +76,18 @@
   })
 
   $effect(() => {
-    getReceiveFolder().then((path) => {
-      folder = path
-    })
-  })
-
-  $effect(() => {
-    const unlistenPromise = onReceiveFolderChange((newFolder) => {
-      folder = newFolder ?? null
-    })
-
-    return () => {
-      unlistenPromise.then((unlisten) => unlisten())
-    }
-  })
-
-  $effect(() => {
-    if (folder === null) return
-    basename(folder)
-      .then((baseName) => {
-        folderName = baseName
+    if (resultFilePath === null) return
+    let directory = "Unknown directory"
+    dirname(resultFilePath)
+      .then((dir) => {
+        directory = dir
+        return basename(dir)
+      })
+      .then((dirName) => {
+        resultFolderName = dirName
       })
       .catch((_) => {
-        folderName = folder
+        resultFolderName = directory
       })
   })
 
@@ -112,14 +101,20 @@
     onEvent.onmessage = async (message) => {
       switch (message.event) {
         case "fileInfo":
+          fileInfo = message.data
+          onFileInfo(message.data)
+
+          resultFilePath = await computeNonexistingPath(
+            await getReceiveFolder(),
+            fileInfo.fileName
+          )
+
           if (await getAskBeforeReceive()) {
-            centerState = { state: "confirmation" }
+            askBeforeReceive()
           } else {
             confirmReceive()
           }
 
-          fileInfo = message.data
-          onFileInfo(message.data)
           break
         case "transitInfo":
           if (centerState.state === "progress") {
@@ -149,19 +144,32 @@
     }
   }
 
+  async function askBeforeReceive() {
+    if (platform() === "linux") {
+      const path = await selectReceivePath()
+
+      if (path !== null) {
+        confirmReceive()
+      } else {
+        centerState = { state: "confirmation" }
+      }
+    } else {
+      centerState = { state: "confirmation" }
+    }
+  }
+
   function confirmReceive() {
     centerState = {
       state: "progress",
       progress: null,
       transitInfo: null,
-      finalFolder: folder!,
       finished: false,
     }
 
     if (MOCK) {
       mockConfirmReceive()
     } else {
-      invoke("confirm_receive", { folder })
+      invoke("confirm_receive", { filePath: resultFilePath })
     }
   }
 
@@ -173,27 +181,34 @@
     }
   }
 
-  async function selectFolder() {
-    const path = await open({
-      directory: true,
+  async function selectReceivePath() {
+    const path = await save({
+      defaultPath: resultFilePath!,
     })
 
     if (path) {
-      setReceiveFolder(path)
+      resultFilePath = path
+
+      try {
+        const folder = await dirname(path)
+        setReceiveFolder(folder)
+      } catch (e) {
+        console.error(e)
+      }
     }
+
+    return path
   }
 
   async function openReceivedFile() {
     if (centerState.state === "progress") {
-      const filePath = await join(centerState.finalFolder, fileInfo!.fileName)
-      invoke("open_file", { filePath })
+      invoke("open_file", { filePath: resultFilePath })
     }
   }
 
   async function revealReceivedFile() {
     if (centerState.state === "progress") {
-      const filePath = await join(centerState.finalFolder, fileInfo!.fileName)
-      invoke("reveal_file", { filePath })
+      invoke("reveal_file", { filePath: resultFilePath })
     }
   }
 
@@ -224,11 +239,11 @@
         <p>Save to this folder</p>
         <button
           class="folder-chooser"
-          title={folder}
-          aria-label="Click to choose folder. Current folder is {folderName}"
-          onclick={selectFolder}
+          title={resultFilePath}
+          aria-label="Click to choose file path. Current folder for the file is {resultFolderName}"
+          onclick={selectReceivePath}
         >
-          <span class="text">{folderName}</span>
+          <span class="text">{resultFolderName}</span>
           <span class="icon">
             <FolderIcon size={16} />
           </span>
