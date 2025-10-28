@@ -103,9 +103,6 @@
     bind:value={code}
     bind:this={codeField}
   />
-  <button type="submit" aria-label="Receive file" disabled={code === ""}>
-    <ChevronRightIcon size={24} />
-  </button>
 
   {#if completions.length > 0}
     <div
@@ -126,6 +123,10 @@
       {/each}
     </div>
   {/if}
+
+  <button type="submit" aria-label="Receive file" disabled={code === ""}>
+    <ChevronRightIcon size={24} />
+  </button>
 </form>
 
 <style>
