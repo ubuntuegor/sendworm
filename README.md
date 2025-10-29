@@ -23,7 +23,7 @@ Cross-platform desktop app to share files using [Magic Wormhole](https://magic-w
     <tr>
       <td><a href="https://apps.microsoft.com/store/detail/9NDSF8H9P959?launch=true&mode=full"><img width=200 src="https://get.microsoft.com/images/en-us%20dark.svg"/></a></td>
       <td>Only binary</td>
-      <td>Only binary</td>
+      <td><a href="https://flathub.org/apps/to.bnt.sendworm"><img width=160 alt="Get it on Flathub" src='https://flathub.org/api/badge?locale=en'/></a></td>
     </tr>
     <tr>
       <th colspan="3"><b><a href="https://github.com/ubuntuegor/sendworm/releases/latest">Download binary</a></b></th>
